@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.testosteronecalc.*
+import com.example.testosteronecalc.HistoryItem
+import com.example.testosteronecalc.HistoryStorage
+import com.example.testosteronecalc.Unit
 import java.text.DecimalFormat
 
 @Composable
