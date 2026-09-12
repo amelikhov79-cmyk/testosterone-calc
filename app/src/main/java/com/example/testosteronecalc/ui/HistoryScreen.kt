@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.testosteronecalc.HistoryItem
 import com.example.testosteronecalc.HistoryStorage
-import com.example.testosteronecalc.Unit
+import com.example.testosteronecalc.TUnit
 import java.text.DecimalFormat
 
 @Composable
@@ -78,4 +78,4 @@ fun HistoryScreen(storage: HistoryStorage) {
 }
 
 private fun unitLabel(name: String): String =
-    runCatching { Unit.valueOf(name).label }.getOrDefault(name)
+    runCatching { TUnit.valueOf(name).label }.getOrDefault(name)
