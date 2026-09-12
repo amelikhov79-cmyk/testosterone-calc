@@ -15,7 +15,7 @@ import com.example.testosteronecalc.Category
 import com.example.testosteronecalc.HistoryItem
 import com.example.testosteronecalc.HistoryStorage
 import com.example.testosteronecalc.Status
-import com.example.testosteronecalc.Unit
+import com.example.testosteronecalc.TUnit
 import com.example.testosteronecalc.calculateFreeTestosterone
 import com.example.testosteronecalc.freeTestosteroneRange
 import com.example.testosteronecalc.toNmolL
@@ -25,7 +25,7 @@ import java.text.DecimalFormat
 @Composable
 fun FreeTestosteroneScreen(storage: HistoryStorage) {
     var totalT by remember { mutableStateOf("") }
-    var totalUnit by remember { mutableStateOf(Unit.NMOL_L) }
+    var totalUnit by remember { mutableStateOf(TUnit.NMOL_L) }
     var shbg by remember { mutableStateOf("") }
     var albumin by remember { mutableStateOf("43") }
     var category by remember { mutableStateOf(Category.MALE_ADULT) }
