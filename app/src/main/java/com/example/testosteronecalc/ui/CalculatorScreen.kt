@@ -25,13 +25,13 @@ import java.text.DecimalFormat
 @Composable
 fun CalculatorScreen(storage: HistoryStorage) {
     var input by remember { mutableStateOf("") }
-    var fromUnit by remember { mutableStateOf(TUnit.NMOL_L) }
-    var toUnit by remember { mutableStateOf(TUnit.NG_ML) }
+    var fromUnit by remember { mutableStateOf(TUnit.NG_ML) }
+    var toUnit by remember { mutableStateOf(TUnit.NMOL_L) }
     var category by remember { mutableStateOf(Category.MALE_ADULT) }
     var result by remember { mutableStateOf<Double?>(null) }
     var status by remember { mutableStateOf<Status?>(null) }
 
-    val df = DecimalFormat("#.####")
+    val df = DecimalFormat("0.00")
 
     fun doConvert() {
         val v = input.replace(',', '.').toDoubleOrNull() ?: return
