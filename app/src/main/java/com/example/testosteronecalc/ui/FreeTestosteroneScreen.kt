@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,11 +27,11 @@ import java.text.DecimalFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FreeTestosteroneScreen(storage: HistoryStorage) {
-    var totalT by remember { mutableStateOf("") }
-    var totalUnit by remember { mutableStateOf(TUnit.NMOL_L) }
-    var shbg by remember { mutableStateOf("") }
-    var albumin by remember { mutableStateOf("43") }
-    var ageGroup by remember { mutableStateOf(AgeGroup.M_18_29) }
+    var totalT by rememberSaveable { mutableStateOf("") }
+    var totalUnit by rememberSaveable { mutableStateOf(TUnit.NMOL_L) }
+    var shbg by rememberSaveable { mutableStateOf("") }
+    var albumin by rememberSaveable { mutableStateOf("43") }
+    var ageGroup by rememberSaveable { mutableStateOf(AgeGroup.M_18_29) }
 
     var freeNmol by remember { mutableStateOf<Double?>(null) }
     var bioNmol by remember { mutableStateOf<Double?>(null) }
