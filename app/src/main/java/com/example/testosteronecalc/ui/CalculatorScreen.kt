@@ -11,15 +11,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.testosteronecalc.*
+import com.example.testosteronecalc.Category
+import com.example.testosteronecalc.HistoryItem
+import com.example.testosteronecalc.HistoryStorage
+import com.example.testosteronecalc.Status
+import com.example.testosteronecalc.TUnit
+import com.example.testosteronecalc.convert
+import com.example.testosteronecalc.evaluate
+import com.example.testosteronecalc.toNmolL
 import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalculatorScreen(storage: HistoryStorage) {
     var input by remember { mutableStateOf("") }
-    var fromUnit by remember { mutableStateOf(Unit.NMOL_L) }
-    var toUnit by remember { mutableStateOf(Unit.NG_ML) }
+    var fromUnit by remember { mutableStateOf(TUnit.NMOL_L) }
+    var toUnit by remember { mutableStateOf(TUnit.NG_ML) }
     var category by remember { mutableStateOf(Category.MALE_ADULT) }
     var result by remember { mutableStateOf<Double?>(null) }
     var status by remember { mutableStateOf<Status?>(null) }
@@ -100,7 +107,7 @@ fun CalculatorScreen(storage: HistoryStorage) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UnitDropdown(label: String, selected: Unit, onSelect: (Unit) -> Unit) {
+fun UnitDropdown(label: String, selected: TUnit, onSelect: (TUnit) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
         OutlinedTextField(
@@ -114,7 +121,7 @@ fun UnitDropdown(label: String, selected: Unit, onSelect: (Unit) -> Unit) {
                 .menuAnchor()
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            Unit.values().forEach { u ->
+            TUnit.values().forEach { u ->
                 DropdownMenuItem(
                     text = { Text(u.label) },
                     onClick = { onSelect(u); expanded = false }
