@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,10 +25,10 @@ import java.text.DecimalFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalculatorScreen(storage: HistoryStorage) {
-    var input by remember { mutableStateOf("") }
-    var fromUnit by remember { mutableStateOf(TUnit.NG_ML) }
-    var toUnit by remember { mutableStateOf(TUnit.NMOL_L) }
-    var category by remember { mutableStateOf(Category.MALE_ADULT) }
+    var input by rememberSaveable { mutableStateOf("") }
+    var fromUnit by rememberSaveable { mutableStateOf(TUnit.NG_ML) }
+    var toUnit by rememberSaveable { mutableStateOf(TUnit.NMOL_L) }
+    var category by rememberSaveable { mutableStateOf(Category.MALE_ADULT) }
     var result by remember { mutableStateOf<Double?>(null) }
     var status by remember { mutableStateOf<Status?>(null) }
 
