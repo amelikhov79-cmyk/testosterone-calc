@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +23,11 @@ import com.example.testosteronecalc.evaluate
 import com.example.testosteronecalc.toNmolL
 import java.text.DecimalFormat
 
+private val NullableDoubleSaver = Saver<Double?, Any>(
+    save = { it ?: "null" },
+    restore = { if (it == "null") null else (it as Number).toDouble() }
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalculatorScreen(storage: HistoryStorage) {
@@ -29,8 +35,12 @@ fun CalculatorScreen(storage: HistoryStorage) {
     var fromUnit by rememberSaveable { mutableStateOf(TUnit.NG_ML) }
     var toUnit by rememberSaveable { mutableStateOf(TUnit.NMOL_L) }
     var category by rememberSaveable { mutableStateOf(Category.MALE_ADULT) }
-    var result by remember { mutableStateOf<Double?>(null) }
-    var status by remember { mutableStateOf<Status?>(null) }
+
+    var result by rememberSaveable(stateSaver = NullableDoubleSaver) {
+        mutableStateOf<Double?>(null)
+    }
+    var statusName by rememberSaveable { mutableStateOf<String?>(null) }
+    val status = statusName?.let { runCatching { Status.valueOf(it) }.getOrNull() }
 
     val df = DecimalFormat("0.00")
 
@@ -39,7 +49,7 @@ fun CalculatorScreen(storage: HistoryStorage) {
         val out = convert(v, fromUnit, toUnit)
         val nmol = toNmolL(v, fromUnit)
         result = out
-        status = evaluate(nmol, category)
+        statusName = evaluate(nmol, category).name
     }
 
     Column(
