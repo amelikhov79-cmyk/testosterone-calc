@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -54,6 +55,7 @@ enum class Tab(val label: String, val icon: ImageVector) {
 fun AppRoot(context: android.content.Context) {
     var tab by remember { mutableStateOf(Tab.CALC) }
     val storage = remember { HistoryStorage(context) }
+    val stateHolder = rememberSaveableStateHolder()
 
     Scaffold(
         bottomBar = {
@@ -69,40 +71,15 @@ fun AppRoot(context: android.content.Context) {
             }
         }
     ) { padding ->
-        // Все экраны держатся в памяти одновременно.
-        // Виден только активный, остальные скрыты.
         Box(Modifier.padding(padding)) {
-
-            // Калькулятор
-            HiddenTab(visible = tab == Tab.CALC) {
-                CalculatorScreen(storage = storage)
-            }
-
-            // Фракции T
-            HiddenTab(visible = tab == Tab.FREE) {
-                FreeTestosteroneScreen(storage = storage)
-            }
-
-            // Нормы
-            HiddenTab(visible = tab == Tab.REF) {
-                ReferenceScreen()
-            }
-
-            // История
-            HiddenTab(visible = tab == Tab.HISTORY) {
-                HistoryScreen(storage = storage)
+            stateHolder.SaveableStateProvider(tab.name) {
+                when (tab) {
+                    Tab.CALC -> CalculatorScreen(storage = storage)
+                    Tab.FREE -> FreeTestosteroneScreen(storage = storage)
+                    Tab.REF -> ReferenceScreen()
+                    Tab.HISTORY -> HistoryScreen(storage = storage)
+                }
             }
         }
-    }
-}
-
-/**
- * Показывает содержимое только когда visible == true.
- * Но НЕ удаляет композицию — состояние (remember) сохраняется.
- */
-@Composable
-private fun HiddenTab(visible: Boolean, content: @Composable () -> Unit) {
-    if (visible) {
-        content()
     }
 }
