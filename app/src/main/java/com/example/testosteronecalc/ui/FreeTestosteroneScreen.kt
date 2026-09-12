@@ -11,7 +11,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.testosteronecalc.*
+import com.example.testosteronecalc.Category
+import com.example.testosteronecalc.HistoryItem
+import com.example.testosteronecalc.HistoryStorage
+import com.example.testosteronecalc.Status
+import com.example.testosteronecalc.Unit
+import com.example.testosteronecalc.calculateFreeTestosterone
+import com.example.testosteronecalc.freeTestosteroneRange
+import com.example.testosteronecalc.toNmolL
 import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
