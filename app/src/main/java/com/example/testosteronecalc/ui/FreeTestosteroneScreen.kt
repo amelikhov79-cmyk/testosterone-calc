@@ -11,13 +11,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.testosteronecalc.Category
+import com.example.testosteronecalc.AgeGroup
 import com.example.testosteronecalc.HistoryItem
 import com.example.testosteronecalc.HistoryStorage
 import com.example.testosteronecalc.Status
 import com.example.testosteronecalc.TUnit
-import com.example.testosteronecalc.calculateFreeTestosterone
-import com.example.testosteronecalc.freeTestosteroneRange
+import com.example.testosteronecalc.calculateFractions
+import com.example.testosteronecalc.evaluateBioPercent
+import com.example.testosteronecalc.evaluateFree
+import com.example.testosteronecalc.freeTestosteroneRangeNmol
 import com.example.testosteronecalc.toNmolL
 import java.text.DecimalFormat
 
@@ -28,12 +30,16 @@ fun FreeTestosteroneScreen(storage: HistoryStorage) {
     var totalUnit by remember { mutableStateOf(TUnit.NMOL_L) }
     var shbg by remember { mutableStateOf("") }
     var albumin by remember { mutableStateOf("43") }
-    var category by remember { mutableStateOf(Category.MALE_ADULT) }
+    var ageGroup by remember { mutableStateOf(AgeGroup.M_18_29) }
 
-    var freeResult by remember { mutableStateOf<Double?>(null) }
+    var freeNmol by remember { mutableStateOf<Double?>(null) }
+    var bioNmol by remember { mutableStateOf<Double?>(null) }
+    var freePercent by remember { mutableStateOf<Double?>(null) }
+    var bioPercent by remember { mutableStateOf<Double?>(null) }
     var freeStatus by remember { mutableStateOf<Status?>(null) }
+    var bioStatus by remember { mutableStateOf<Status?>(null) }
 
-    val df = DecimalFormat("#.##")
+    val df = DecimalFormat("0.00")
 
     fun calculate() {
         val t = totalT.replace(',', '.').toDoubleOrNull() ?: return
@@ -41,15 +47,17 @@ fun FreeTestosteroneScreen(storage: HistoryStorage) {
         val a = albumin.replace(',', '.').toDoubleOrNull() ?: 43.0
 
         val tNmol = toNmolL(t, totalUnit)
-        val ft = calculateFreeTestosterone(tNmol, s, a)
-        freeResult = ft
+        if (tNmol <= 0.0) return
 
-        val range = freeTestosteroneRange(category)
-        freeStatus = when {
-            ft < range.low -> Status.LOW
-            ft > range.high -> Status.HIGH
-            else -> Status.NORMAL
-        }
+        val f = calculateFractions(tNmol, s, a)
+
+        freeNmol = f.freeNmolL
+        bioNmol = f.bioavailableNmolL
+        freePercent = f.freeNmolL / tNmol * 100.0
+        bioPercent = f.bioavailableNmolL / tNmol * 100.0
+
+        freeStatus = evaluateFree(f.freeNmolL, ageGroup)
+        bioStatus = evaluateBioPercent(bioPercent!!)
     }
 
     Column(
@@ -59,9 +67,9 @@ fun FreeTestosteroneScreen(storage: HistoryStorage) {
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("Свободный тестостерон", style = MaterialTheme.typography.headlineSmall)
+        Text("Фракции тестостерона", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Расчёт по формуле Vermeulen (1999)",
+            "Свободный и биодоступный T по формуле Vermeulen (1999)",
             style = MaterialTheme.typography.bodySmall
         )
 
@@ -92,65 +100,139 @@ fun FreeTestosteroneScreen(storage: HistoryStorage) {
             modifier = Modifier.fillMaxWidth()
         )
 
-        CategoryDropdown(category) { category = it }
+        AgeGroupDropdown(ageGroup) { ageGroup = it }
 
         Button(onClick = { calculate() }, modifier = Modifier.fillMaxWidth()) {
-            Text("Рассчитать свободный T")
+            Text("Рассчитать")
         }
 
-        freeResult?.let { ft ->
+        freeNmol?.let { ft ->
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Свободный тестостерон", style = MaterialTheme.typography.labelMedium)
+                    Text("СВОБОДНЫЙ ТЕСТОСТЕРОН",
+                        style = MaterialTheme.typography.labelMedium)
                     Text(
-                        "${df.format(ft)} пг/мл",
+                        "${df.format(ft)} нмоль/л",
                         style = MaterialTheme.typography.headlineMedium
                     )
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(4.dp))
                     Text(
-                        "≈ ${df.format(ft / 288.42)} пмоль/л",
+                        "≈ ${df.format(ft * 288.42)} пг/мл",
                         style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Доля: ${df.format(freePercent ?: 0.0)} % от общего",
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     freeStatus?.let { s ->
-                        Spacer(Modifier.height(10.dp))
-                        Box(
-                            Modifier
-                                .background(Color(s.color))
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text(s.label, color = Color.White)
-                        }
+                        Spacer(Modifier.height(8.dp))
+                        StatusBadge(s)
                     }
-                    val r = freeTestosteroneRange(category)
+                    val r = freeTestosteroneRangeNmol(ageGroup)
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "Референс (${category.label}): ${r.low}–${r.high} пг/мл",
+                        "Референс (${ageGroup.label}): ${r.low}–${r.high} нмоль/л",
                         style = MaterialTheme.typography.bodySmall
                     )
-                    Spacer(Modifier.height(10.dp))
-                    OutlinedButton(onClick = {
-                        storage.add(
-                            HistoryItem(
-                                inputValue = totalT.replace(',', '.').toDoubleOrNull() ?: 0.0,
-                                fromUnit = totalUnit.name,
-                                outputValue = ft,
-                                toUnit = "PG_ML",
-                                timestamp = System.currentTimeMillis(),
-                                type = "free",
-                                shbg = shbg.replace(',', '.').toDoubleOrNull(),
-                                albumin = albumin.replace(',', '.').toDoubleOrNull()
-                            )
-                        )
-                    }) {
-                        Text("💾 Сохранить в историю")
-                    }
                 }
+            }
+
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("БИОДОСТУПНЫЙ ТЕСТОСТЕРОН",
+                        style = MaterialTheme.typography.labelMedium)
+                    Text(
+                        "${df.format(bioNmol ?: 0.0)} нмоль/л",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "≈ ${df.format((bioNmol ?: 0.0) * 288.42)} пг/мл",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Доля: ${df.format(bioPercent ?: 0.0)} % от общего",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    bioStatus?.let { s ->
+                        Spacer(Modifier.height(8.dp))
+                        StatusBadge(s)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Норма доли: 30–60 % от общего",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            OutlinedButton(
+                onClick = {
+                    storage.add(
+                        HistoryItem(
+                            inputValue = totalT.replace(',', '.').toDoubleOrNull() ?: 0.0,
+                            fromUnit = totalUnit.name,
+                            outputValue = ft,
+                            toUnit = "NMOL_L",
+                            timestamp = System.currentTimeMillis(),
+                            type = "free",
+                            shbg = shbg.replace(',', '.').toDoubleOrNull(),
+                            albumin = albumin.replace(',', '.').toDoubleOrNull(),
+                            bioavailable = bioNmol,
+                            freePercent = freePercent,
+                            bioPercent = bioPercent
+                        )
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("💾 Сохранить в историю")
             }
         }
 
         Text(
-            "ℹ️ Альбумин по умолчанию 43 г/л — среднее значение. Если у тебя есть анализ, измени вручную.",
+            "ℹ️ Если свободный T ниже 0,225 нмоль/л — обратитесь к эндокринологу. " +
+                    "Доли: свободный 1,5–3,5 %, биодоступный 30–60 % от общего.",
             style = MaterialTheme.typography.bodySmall
         )
+    }
+}
+
+@Composable
+private fun StatusBadge(status: Status) {
+    Box(
+        Modifier
+            .background(Color(status.color))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Text(status.label, color = Color.White)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AgeGroupDropdown(selected: AgeGroup, onSelect: (AgeGroup) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+        OutlinedTextField(
+            value = selected.label,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Возрастная группа") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            AgeGroup.values().forEach { g ->
+                DropdownMenuItem(
+                    text = { Text(g.label) },
+                    onClick = { onSelect(g); expanded = false }
+                )
+            }
+        }
     }
 }
