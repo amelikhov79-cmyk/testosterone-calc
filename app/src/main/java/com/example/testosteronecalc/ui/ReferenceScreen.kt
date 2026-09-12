@@ -9,7 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.testosteronecalc.*
+import com.example.testosteronecalc.AgeGroup
+import com.example.testosteronecalc.Category
+import com.example.testosteronecalc.Status
+import com.example.testosteronecalc.referenceRange
 
 @Composable
 fun ReferenceScreen() {
@@ -21,6 +24,8 @@ fun ReferenceScreen() {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text("Референсные диапазоны", style = MaterialTheme.typography.headlineSmall)
+
+        // ===== Общий тестостерон =====
         Text("Общий тестостерон (нмоль/л)", style = MaterialTheme.typography.titleMedium)
 
         Category.values().forEach { c ->
@@ -29,38 +34,48 @@ fun ReferenceScreen() {
                 Column(Modifier.padding(14.dp)) {
                     Text(c.label, style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(6.dp))
-                    Row {
-                        Box(Modifier.background(Color(Status.LOW.color)).size(12.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("< ${r.low} — понижен", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Row(Modifier.padding(top = 4.dp)) {
-                        Box(Modifier.background(Color(Status.NORMAL.color)).size(12.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("${r.low} – ${r.high} — норма", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Row(Modifier.padding(top = 4.dp)) {
-                        Box(Modifier.background(Color(Status.HIGH.color)).size(12.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("> ${r.high} — повышен", style = MaterialTheme.typography.bodySmall)
-                    }
+                    ColorRow(Status.LOW, "< ${r.low} — понижен")
+                    ColorRow(Status.NORMAL, "${r.low} – ${r.high} — норма")
+                    ColorRow(Status.HIGH, "> ${r.high} — повышен")
                 }
             }
         }
 
         Divider(Modifier.padding(vertical = 8.dp))
-        Text("Свободный тестостерон (пг/мл)", style = MaterialTheme.typography.titleMedium)
-        Category.values().forEach { c ->
-            val r = freeTestosteroneRange(c)
+
+        // ===== Свободный тестостерон =====
+        Text("Свободный тестостерон (нмоль/л)", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "По возрастным группам (источник: unclinic.ru)",
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        AgeGroup.values().forEach { g ->
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(14.dp)) {
-                    Text(c.label, style = MaterialTheme.typography.titleSmall)
+                    Text(g.label, style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.height(4.dp))
                     Text(
-                        "${r.low} – ${r.high} пг/мл",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 4.dp)
+                        "${g.low} – ${g.high} нмоль/л",
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
+            }
+        }
+
+        Divider(Modifier.padding(vertical = 8.dp))
+
+        // ===== Доли фракций =====
+        Text("Доли фракций от общего T (%)", style = MaterialTheme.typography.titleMedium)
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(14.dp)) {
+                ColorRow(Status.LOW, "Свободный < 1,5 %")
+                ColorRow(Status.NORMAL, "Свободный 1,5 – 3,5 %")
+                ColorRow(Status.HIGH, "Свободный > 3,5 %")
+                Spacer(Modifier.height(6.dp))
+                ColorRow(Status.LOW, "Биодоступный < 30 %")
+                ColorRow(Status.NORMAL, "Биодоступный 30 – 60 %")
+                ColorRow(Status.HIGH, "Биодоступный > 60 %")
             }
         }
 
@@ -68,5 +83,18 @@ fun ReferenceScreen() {
             "⚠️ Диапазоны ориентировочные. Точные нормы — только по референсам вашей лаборатории.",
             style = MaterialTheme.typography.bodySmall
         )
+    }
+}
+
+@Composable
+private fun ColorRow(status: Status, text: String) {
+    Row(Modifier.padding(top = 4.dp)) {
+        Box(
+            Modifier
+                .background(Color(status.color))
+                .size(12.dp)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(text, style = MaterialTheme.typography.bodySmall)
     }
 }
