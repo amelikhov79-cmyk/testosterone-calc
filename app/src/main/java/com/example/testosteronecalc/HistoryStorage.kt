@@ -15,7 +15,10 @@ data class HistoryItem(
     val timestamp: Long,
     val type: String = "total",
     val shbg: Double? = null,
-    val albumin: Double? = null
+    val albumin: Double? = null,
+    val bioavailable: Double? = null,
+    val freePercent: Double? = null,
+    val bioPercent: Double? = null
 )
 
 class HistoryStorage(context: Context) {
@@ -36,6 +39,13 @@ class HistoryStorage(context: Context) {
         val list = load()
         list.add(0, item)
         if (list.size > 100) list.removeAt(list.lastIndex)
+        save(list)
+    }
+
+    /** Удалить одну запись по timestamp (он уникален с точностью до мс). */
+    fun remove(item: HistoryItem) {
+        val list = load()
+        list.removeAll { it.timestamp == item.timestamp }
         save(list)
     }
 
